@@ -1,4 +1,4 @@
-function [significativas,possorted] = showHists_v3(countings_G1,countings_G2,groupNames,grouperVar,valueFilter,nbins,B,CI,nameFig,title)
+function [significativas,possorted] = showHists_v3(countings_G1,countings_G2,groupNames,grouperVar,valueFilter,nbins,B,CI,nameFig,title,pathToFigs)
 
 if nargin<6; nbins=1000; end
 if nargin<7; B=1000; end
@@ -37,4 +37,4 @@ end
 %figure('Name',title,'NumberTitle','off'); [significativas,possorted]=showMmodeAndCounts(miHist,ejeHist,groupNames,grouperVar,valueFilter,countings_G1+countings_G2,CI);
 hf=figure('Name',title,'NumberTitle','off'); [significativas,possorted]=showMmodeAndCounts_v2(miHist,ejeHist,groupNames,grouperVar,valueFilter,countings_G1,countings_G2,CI);
 
-if nargin==10 && ischar(nameFig); nameFig=strrep(matlab.lang.makeValidName(nameFig),'_',''); nameFig=matlab.lang.makeUniqueStrings(nameFig); savefig(hf,nameFig); end
+if nargin>=10 && ischar(nameFig); nameFig=strrep(matlab.lang.makeValidName(nameFig),'_',''); nameFig=matlab.lang.makeUniqueStrings(nameFig); savefig(hf,fullfile(pathToFigs,nameFig)); fprintf('Figure saved in %s\n',pathToFigs); end

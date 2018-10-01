@@ -9,7 +9,7 @@ pob1 = zeros(M1,1); pob1(1:cuantos1) = 1;
 pob2 = zeros(M2,1); pob2(1:cuantos2) = 1;
 if nargin<6; B = 500; end
 misdeltas = zeros(B,1);
-parfor b=1:B
+for b=1:B
     ind1 = ceil(M1*rand(M1,1));
     pob1b = pob1(ind1);
     odd1 = sum(pob1b)/(M1); odd1=odd1*scale1;

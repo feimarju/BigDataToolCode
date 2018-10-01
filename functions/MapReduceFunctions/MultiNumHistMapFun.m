@@ -8,6 +8,7 @@ if isempty(data); warning(':S... there seems to be an empty file...'); return; e
 if ~isempty(subsetter); subset = data(subsetter(data),:); else; subset=data; end
 vals = subset.(varname);
 % Se quitan los NaNs y se filtra por numericFiltering
+if iscell(vals); vals=cellfun(@str2double,vals); end
 vals(isnan(vals))=[];
 if nargin>=6 && ~isempty(numericFiltering)
     vals=vals(numericFiltering(vals));

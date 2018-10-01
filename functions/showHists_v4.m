@@ -1,4 +1,4 @@
-function [significativas1,possorted1,significativas2,possorted2] = showHists_v4(countings_G1,countings_G2,countings_G3,groupNames,grouperVar,valueFilter,nbins,B,CI,nameFig,title)
+function [significativas1,possorted1,significativas2,possorted2] = showHists_v4(countings_G1,countings_G2,countings_G3,groupNames,grouperVar,valueFilter,nbins,B,CI,nameFig,title,pathToFigs)
 % El grupo 2 es el que queda en el medio, por lo tanto,
 % se comparan los extremos con el medio: G1 vs. G2 y G3 vs. G2.
 if nargin<6; nbins=1000; end
@@ -16,6 +16,7 @@ l = length(groupNames);
 
 %% Hists with the parallelized batch version
 parfor i=1:l
+    if mod(i,500)==0; fprintf('Iters: %d\n',i); end
     miHist1(i,:) = myBootOdds2(countings_G1(i),sumgrupos_G1,countings_G2(i),sumgrupos_G2,ejeHist,B);
     if ~isempty(countings_G3); miHist2(i,:) = myBootOdds2(countings_G3(i),sumgrupos_G3,countings_G2(i),sumgrupos_G2,ejeHist,B); end
 end
@@ -28,4 +29,4 @@ else
     [significativas1,possorted1,significativas2,possorted2]=showMmodeAndCounts_v3(miHist1,miHist2,ejeHist,groupNames,grouperVar,valueFilter,countings_G1,countings_G2,countings_G3,CI);
 end
 
-if nargin==11 && ischar(nameFig); nameFig=strrep(matlab.lang.makeValidName(nameFig),'_',''); nameFig=matlab.lang.makeUniqueStrings(nameFig); savefig(hf,nameFig); end
+if nargin>=11 && ischar(nameFig); nameFig=strrep(matlab.lang.makeValidName(nameFig),'_',''); nameFig=matlab.lang.makeUniqueStrings(nameFig); savefig(hf,fullfile(pathToFigs,nameFig)); end

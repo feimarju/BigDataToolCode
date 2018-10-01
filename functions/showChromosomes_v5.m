@@ -1,4 +1,4 @@
-function showChromosomes_v5(countings_G1_all,countings_G2_all,groupNames,varNames,significativas,title)
+function showChromosomes_v5(countings_G1_all,countings_G2_all,groupNames,varNames,significativas,title,pathToResults)
 
 cromosom={}; variables={}; countvar=0; signifs=[]; showProps=0; sigma=0; nsigma=6; crms=[]; names={}; umbral=0;
 for iv=1:length(varNames)
@@ -120,8 +120,13 @@ visualizeChromosomes(cromosom,variables,signifs,props)
             parts=strtrim(strsplit(signfnames{isn},':'));
             vars{isn}=parts{1}; cats{isn}=parts{2};
         end
-        T=table(vars',cats',vals'); T.Properties.VariableNames={'VariableName','CategorieName','DiffProps'};
-        writetable(T,sprintf('Chromosome_%dsigma.txt',round(nsigma)))
+        if ~isempty(signfnames)
+            T=table(vars',cats',vals'); T.Properties.VariableNames={'VariableName','CategorieName','DiffProps'};
+            writetable(T,fullfile(pathToResults,sprintf('Chromosome_%dsigma.txt',round(nsigma))))
+            fprintf('Great! Results are saved in %s\n',pathToResults)
+        else
+            fprintf('Sorry, results are not saved because there are not significant variables...\n')
+        end
     end
 
 %%

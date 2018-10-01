@@ -19,7 +19,6 @@ if ~isempty(filteringVar)
 else; subsetter=[];
 end
 if ~isempty(aggregationVar); aggregationVar=varNames{end}; end
-
 % Mapreduce
 outds = mapreduce(ds,@(data,info,kvs)MultiCountMapFun_v5(data,info,kvs,...
     varNames,threshold,subsetter,aggregationVar,numericFilt,thrFnc),@MultiCountReduceFun_v2);

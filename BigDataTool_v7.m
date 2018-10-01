@@ -2,10 +2,12 @@ function BigDataTool_v7
 
 if isempty(gcp('nocreate')); myCluster=parcluster('local'); parpool(myCluster,myCluster.NumWorkers); end
 addpath(genpath('functions'))
-f=figure; set(gcf, 'Position', get(0, 'Screensize'));
+%f=figure; set(gcf, 'Position', get(0, 'Screensize'));
+f=figure; set(gcf,'Position',get(0,'Screensize'),'Color','white','ToolBar','None','MenuBar','none','Name','BigDataTool','NumberTitle','off');
 
-pathToData='data'; pathToFigs='figs'; caso=''; typeFormat=1;
-mylist = dir(pathToData); listfolders={mylist(:).name}; isfolders={mylist(:).isdir}; posToRemove=zeros(1,length(listfolders));
+partsPath=strsplit(pwd,filesep); pathToData=strjoin(partsPath(1:end-1),filesep);
+pathToFigs='figures'; caso=''; typeFormat=1;
+mylist = dir(fullfile(pathToData,'*Data')); listfolders={mylist(:).name}; isfolders={mylist(:).isdir}; posToRemove=zeros(1,length(listfolders));
 for i=1:length(listfolders); if strcmp(listfolders{i},'.') || strcmp(listfolders{i},'..') || strcmp(listfolders{i},'.DS_Store') || isfolders{i}==0; posToRemove(i)=1; end; end
 listfolders(logical(posToRemove))=[]; listfolders=[{'--Select DDBB--'},listfolders];
 
@@ -23,7 +25,7 @@ currentPos=1; numRows=10; N=100; data=[]; numThreshold=[]; thrType=1; isNumerica
 
 %% Controladores
 separac=0.04; %spaceTypeButtons=0.33;
-infoTxt = uicontrol('Style','text','FontWeight','Bold','FontSize',16,'HorizontalAlignment','center','Units','normal','Position',[0.1 0.95 .8 .05]);
+infoTxt = uicontrol('Style','text','FontWeight','Bold','FontSize',16,'HorizontalAlignment','center','Units','normal','Position',[0.1 0.95 .8 .05],'BackgroundColor','white');
 Cs{1} = uicontrol('Style','popup','String',listfolders,'Units','normal','Position', [0.015 0.85 .105 .1],'Callback', @FchooseDDBB);
 Cs{2} = uicontrol('Style','popup','String',{'--Choose threshold method-- (default: Pareto)','Pareto','6 sigma','3 groups'},'Units','normal','Position', [0.41 .24 .18 .1],'Callback', @FChooseTypeThreshold,'Visible','off');
 Cs{3} = uicontrol('Style','popup','String',{'--Choose Analysis--','Hist. indiv.','Chromosoms','Bivar.','Export {X,Y}'},'Units','normal','Position', [0.015 0.85-separac .105 .1],'Callback', @FChooseAnalysis,'Visible','off');
@@ -53,6 +55,7 @@ return
     function FchooseDDBB(source,~)
         caso=source.String{source.Value}; if source.Value==1; return; end
         set(infoTxt,'String','Loading DDBB...'); drawnow;
+        pathToFigs=fullfile(pathToData,caso,pathToFigs);
         [dss,hist3D]=loadData(caso,pathToData);
         % Check variable types
         nsheets=length(dss);
@@ -219,7 +222,7 @@ return
                     [N,pos]=sort(cat(1,kv_counts.Value{:}),'descend');
                     c=kv_counts.Key(pos);
                     if isnumeric(N); Counts=num2cell(N); else; Counts=N; end; Category=c; table_count_vars=table(Category(:),Counts(:));
-                    if saveHists; nameFolder=fullfile(pathToFigs,caso,['Sheet',num2str(nsheet)]); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end; nameFile=fullfile(nameFolder,sprintf('%d_%s.mat',idxv,t.ColumnName{idxv})); save(nameFile,'table_count_vars'); end
+                    if saveHists; nameFolder=fullfile(pathToFigs,['Sheet',num2str(nsheet)]); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end; nameFile=fullfile(nameFolder,sprintf('%d_%s.mat',idxv,t.ColumnName{idxv})); save(nameFile,'table_count_vars'); end
                 end
                 if isempty(hist3D)
                     if typeData==1     % categorical
@@ -315,14 +318,14 @@ return
                 [countings_G1{idxVar},countings_G2{idxVar},countings_G3{idxVar},namegroups{idxVar}] = histmulti_MR_v5(dss{nsheet},thresholdVar,threshold,selectedVar,filteringVar,valueFilter,aggregationVar,numericFilt,thrFnc);
                 varnames{idxVar}=varName;
                 set(infoTxt,'String',['Please, wait... showing computed histograms of ',selectedVar,'...']); drawnow;
-                nameFolder=fullfile(pathToFigs,caso,['Sheet',num2str(nsheet)],'chromosoms'); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
+                nameFolder=fullfile(pathToFigs,['Sheet',num2str(nsheet)],'chromosoms'); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
                 if thrType<3
-                    nameFig=fullfile(nameFolder,sprintf('%d%s.fig',idxVar,varName));
-                    [significativas{idxVar},possorted]=showHists_v3(countings_G1{idxVar},countings_G2{idxVar},namegroups{idxVar},selectedVar,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2)');
+                    nameFig=sprintf('%d%s.fig',idxVar,varName);
+                    [significativas{idxVar},possorted]=showHists_v3(countings_G1{idxVar},countings_G2{idxVar},namegroups{idxVar},selectedVar,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2)',nameFolder);
                     significativas{idxVar}=significativas{idxVar}(possorted); namegroups{idxVar}=namegroups{idxVar}(possorted);
                     countings_G1{idxVar}=countings_G1{idxVar}(possorted,:); countings_G2{idxVar}=countings_G2{idxVar}(possorted,:);
                 else
-                    nameFig=fullfile(nameFolder,sprintf('%d%sG1vsG2vsG3.fig',idxVar,varName)); [significativas1{idxVar},possorted1,significativas2{idxVar},possorted2]=showHists_v4(countings_G1{idxVar},countings_G3{idxVar},countings_G2{idxVar},namegroups{idxVar},selectedVar,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2 vs. G3)');
+                    nameFig=sprintf('%d%sG1vsG2vsG3.fig',idxVar,varName); [significativas1{idxVar},possorted1,significativas2{idxVar},possorted2]=showHists_v4(countings_G1{idxVar},countings_G3{idxVar},countings_G2{idxVar},namegroups{idxVar},selectedVar,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2 vs. G3)',nameFolder);
                     countings_G1{idxVar}=countings_G1{idxVar}(possorted1,:); countings_G31{idxVar}=countings_G3{idxVar}(possorted1,:);
                     significativas1{idxVar}=significativas1{idxVar}(possorted1); namegroups1{idxVar}=namegroups{idxVar}(possorted1);
                     countings_G2{idxVar}=countings_G2{idxVar}(possorted2,:); countings_G32{idxVar}=countings_G3{idxVar}(possorted2,:);
@@ -354,14 +357,14 @@ return
                     [countings_G1{idxVar}{idxType},countings_G2{idxVar}{idxType},countings_G3{idxVar}{idxType},namegroups{idxVar}{idxType}]...
                         = histmultiDate_MR_v2(dss{nsheet},thresholdVar,threshold,selectedVar,groupNames,filteringVar,valueFilter,nBins,dateType,thrFnc);
                     set(infoTxt,'String',['Please, wait... showing computed histograms of ',varNameDate,'...']); drawnow;
-                    nameFolder=fullfile(pathToFigs,caso,['Sheet',num2str(nsheet)],'chromosoms'); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
+                    nameFolder=fullfile(pathToFigs,['Sheet',num2str(nsheet)],'chromosoms'); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
                     if thrType<3
                         nameFig=fullfile(nameFolder,sprintf('%d_%s.fig',idxVar,varNameDate));
-                        [significativs{idt},possorted]=showHists_v3(countings_G1{idxVar}{idxType},countings_G2{idxVar}{idxType},groupNames,varNameDate,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2)');
+                        [significativs{idt},possorted]=showHists_v3(countings_G1{idxVar}{idxType},countings_G2{idxVar}{idxType},groupNames,varNameDate,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2)',nameFolder);
                         significativs{idt}=significativs{idt}(possorted); namegroups{idxVar}{idxType}=namegroups{idxVar}{idxType}(possorted);
                         countings_G1{idxVar}{idxType}=countings_G1{idxVar}{idxType}(possorted,:); countings_G2{idxVar}{idxType}=countings_G2{idxVar}{idxType}(possorted,:);
                     else
-                        nameFig=fullfile(nameFolder,sprintf('%d_%s_G1vsG2vsG3.fig',idxVar,varName)); [significativs1{idt},possorted1,significativs2{idt},possorted2]=showHists_v4(countings_G1{idxVar}{idxType},countings_G3{idxVar}{idxType},countings_G2{idxVar}{idxType},namegroups{idxVar}{idxType},selectedVar,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2 vs. G3)');
+                        nameFig=fullfile(nameFolder,sprintf('%d_%s_G1vsG2vsG3.fig',idxVar,varName)); [significativs1{idt},possorted1,significativs2{idt},possorted2]=showHists_v4(countings_G1{idxVar}{idxType},countings_G3{idxVar}{idxType},countings_G2{idxVar}{idxType},namegroups{idxVar}{idxType},selectedVar,valueFilter,nBins,B,CI,nameFig,'Hists (G1 vs. G2 vs. G3)',nameFolder);
                         countings_G1{idxVar}{idxType}=countings_G1{idxVar}{idxType}(possorted1,:); countings_G31{idxVar}{idxType}=countings_G3{idxVar}{idxType}(possorted1,:);
                         significativs1{idt}=significativs1{idt}(possorted1); namegroups1{idxVar}{idxType}=namegroups{idxVar}{idxType}(possorted1);
                         countings_G2{idxVar}{idxType}=countings_G2{idxVar}{idxType}(possorted2,:); countings_G32{idxVar}{idxType}=countings_G3{idxVar}{idxType}(possorted2,:);
@@ -431,12 +434,14 @@ return
                 continue
             end
         end
+        pathToResults=fullfile(pathToData,caso,'results');
+        if exist(pathToResults,'dir')==0; mkdir(pathToResults); end
         if thrType<3
-            showChromosomes_v5(countings_G1,countings_G2,namegroups,varnames,significativas,'Chromosoms (G1 vs. G2)')
+            showChromosomes_v5(countings_G1,countings_G2,namegroups,varnames,significativas,'Chromosoms (G1 vs. G2)',pathToResults)
             disp('G1: left side of threshold'); disp('G2: right side of threshold')
         else
-            showChromosomes_v5(countings_G1,countings_G31,namegroups1,varnames,significativas1,'Chromosoms (G1 vs. G2)')
-            showChromosomes_v5(countings_G2,countings_G32,namegroups2,varnames,significativas2,'Chromosoms (G3 vs. G2)')
+            showChromosomes_v5(countings_G1,countings_G31,namegroups1,varnames,significativas1,'Chromosoms (G1 vs. G2)',pathToResults)
+            showChromosomes_v5(countings_G2,countings_G32,namegroups2,varnames,significativas2,'Chromosoms (G3 vs. G2)',pathToResults)
             disp('G1: left side of the left threshold'); disp('G3: right side of the right threshold')
         end
         infoTxt.String='Done!';
@@ -578,7 +583,7 @@ return
         for ipv=1:length(pos1); X(pos1(ipv),pos2(ipv))=kv_counts.Value{ipv}; end
         infoTxt.String='Done';
         figure; bar3(X); set(gca,'XTick',1:length(x2)); set(gca,'XTickLabel',x2); set(gca,'YTick',1:length(x1)); set(gca,'YTickLabel',x1); xlabel(varNames{2}); ylabel(varNames{1}); axis square
-        nameFolder=fullfile(pathToFigs,caso,['Sheet',num2str(nsheet)]); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
+        nameFolder=fullfile(pathToFigs,['Sheet',num2str(nsheet)]); if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
         nameFig=fullfile(nameFolder,sprintf('Bivar_%s_vs_%s.fig',varNames{1},varNames{2}));
         savefig(nameFig);
     end
@@ -678,7 +683,7 @@ return
                 zlabel('# occurrence'); ylabel(strcat('#',strrep(varName,'_',' ')));
             end
             title(axes1{ia1}); if isempty(axes1{1}); view([-90 0]); end
-            nameFolder=fullfile(pathToFigs,caso,['Sheet',num2str(nsheet)]);
+            nameFolder=fullfile(pathToFigs,['Sheet',num2str(nsheet)]);
             if ~exist(nameFolder,'dir'); mkdir(nameFolder); end
             nameFig=fullfile(nameFolder,sprintf('%d_%s_%s.fig',idxVar,varName,axes1{ia1}));
             savefig(nameFig);

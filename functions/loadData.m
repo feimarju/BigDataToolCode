@@ -1,36 +1,17 @@
 function [dss,hist3D]=loadData(caso,pathToData)
 if nargin<2; pathToData=''; end
 
-%---------------------------  MOFIFICABLE ---------------------------------
-casos={'CRE','Iberostar','REE','SCA','NH','ICOS','ECU911','CRG','EEG','Onco'};
-pathDB={'CRE/datos/Datos*.xlsx',... %Datos*Jaen* %Datos 2014*      % CRE
-    'Iberostar/PrimerProyecto/InformesURJC/Informe1.txt',...  % Iberostar
-    'REE/ANOMALIAS2.xlsx',...                                 % REE
-    'SCA/DatosSCA_v2_conU.xlsx',...                           % SCA
-    'NH/tbl_MastroBranches.xlsx',...                          % NH
-    'ICOS/ICOstats_v2.txt'...                                 % ICOS
-    'ECU911/*_db.xlsx'...                                     % ECU911
-    'CRG/tablaConjunta_reducida.txt'...                       % Cronicidad
-    'EEG/exportar_grande.txt'...                              % EEG
-    'Onco/supervivencia_v2.xlsx'...                              % Onco
-    };
-hists3D={...
-    {{'Jaen','Alicante'},{'2014','2015','2016','2017'}},... % CRE
-    {},...                                                  % Iberostar
-    {},...                                                  % REE
-    {},...                                                  % SCA
-    {},...                                                  % NH
-    {},...                                                  % ICOS
-    {{'2014'},{'Febrero','Abril','Agosto'}},...             % ECU911
-    {},...                                                  % CRG
-    {},...                                                  % EEG
-    {},...                                                  % Onco
-    };
-%--------------------------------------------------------------------------
+readingFiles=fullfile(pathToData,caso,'FilesToRead.txt');
+if exist(readingFiles,'file')==2
+    fid=fopen(readingFiles); pathDB=textscan(fid,'%s'); pathDB=pathDB{1}; fclose(fid);
+else
+    fprintf('Please create a file called ''FilesToRead.txt'' into %s folder and inside write the paths of the files you want to read.\nIf you want to read all your files, type ''*. [Extension]'', where the extension can be ''xlsx'',''csv'',''txt''...\n');
+end
+scheme3DFiles=fullfile(pathToData,caso,'scheme3Dfiles.txt');
+if exist(scheme3DFiles)==2; fid=fopen(scheme3DFiles); hist3D=textscan(fid,'%s'); fclose(fid); hist3D=hist3D{1}; hist3D={strsplit(hist3D{1},','),strsplit(hist3D{2},',')}; else; hist3D={}; end
 
-if ~isnumeric(caso); caso=find(strcmp(casos,caso)); end
-fprintf('Loading data from %s database...\n',casos{caso})
-pathData=fullfile(pathToData,pathDB{caso});
+fprintf('Loading data from %s database...\n',caso)
+pathData=fullfile(pathToData,caso,pathDB{1});
 parts=strsplit(pathData,'.'); extension=parts{end};
 params={'ReadSize',5000};
 switch extension
@@ -51,5 +32,4 @@ elseif isa(dss{1},'matlab.io.datastore.TabularTextDatastore')
     %dst{1}=[]; [dss,dst]=correctFormats(dss,dst);
     dss{1}.TextscanFormats(strcmp(dss{1}.TextscanFormats,'%f'))={'%q'};
 end
-hist3D=hists3D{caso};
 fprintf('Done!\n')
