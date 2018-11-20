@@ -58,7 +58,7 @@ if ~m3 % Si no se compara con tres grupos distintos (dos umbrales: Top,Normal,Sm
     hh2 = mean(hist2b(:,~posNaNs2),1); hh2T = hh2/(sum(mean(hist2b,1))+sum(mean(hist1b,1))); hh2 = hh2/sum(hh2);
     normdhistb=dhistb/(sum(mean(hist1b,1))+sum(mean(hist2b,1)));
     nameVar=strrep(varNames{2},'_',' '); if ~isempty(trsFnc); nameVar=sprintf('%s(%s)',trsFnc{1}(2:end),nameVar); end
-    figure; title([nameVar, ' ', valueFilter]);
+    figure; title(nameVar);%[nameVar, ' ', valueFilter]);
     subplot(3,2,1); plot(means1,hh1); hold on; plot(means2,hh2); xlabel(nameVar); ylabel('pdf','Interpreter','Latex'); axis tight; legend('G1','G2'); set(gca,'FontSize',16,'FontName','Times'); yl=ylim;
     subplot(3,2,3); plot(means1,hh1T); hold on; plot(means2,hh2T); xlabel(nameVar); ylabel('normalized pdf','Interpreter','Latex'); axis tight; legend('G1','G2'); set(gca,'FontSize',16,'FontName','Times'); ylim(yl);
     subplot(3,2,5); pintaICgris(normdhistb,[],CI,binsGroups(1:end-1)); xlabel(nameVar); ylabel('$\Delta$ pdf','Interpreter','Latex'); axis tight; set(gca,'FontSize',16,'FontName','Times'); yl=ylim; if abs(yl(1)/yl(2))<.1; yl(1)=-max(abs(yl(1)),abs(.2*yl(2))); elseif abs(yl(2)/yl(1))<.1; yl(2)=max(abs(yl(2)),abs(.2*yl(1))); end; ylim(yl);

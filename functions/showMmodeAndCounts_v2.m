@@ -91,7 +91,7 @@ countCats=countings_G1+countings_G2;
         view([123 80]);
         set(gca,'FontSize',12,'FontName','Times'); axis tight;
         %posNN=find(sum(mh)~=0); ejes=axis; ejes(3:4)=[ejeHist(posNN(1)-10) ejeHist(posNN(end)+10)]; axis(ejes);
-        posNN=find(sum(mh)~=0); if posNN(1)>10; ejes=axis; ejes(3:4)=[ejeHist(posNN(1)-10) ejeHist(posNN(end)+10)]; axis(ejes); end
+        posNN=find(sum(mh)~=0); if posNN(1)>10; ejes=axis; ejes(3:4)=[ejeHist(max(1,posNN(1)-10)) ejeHist(min(length(ejeHist),posNN(end)+10))]; axis(ejes); end
         if typeSort==2; yl=ylim; hold on; plot3(1:l,repmat(yl(1),1,l),countCats2,'Color',[35,186,237]/255,'LineWidth',2); hold off; end
     end
 
